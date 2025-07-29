@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // package main is the entry point for the PDF chunking service.
-// This service is designed to be deployed as a Google Cloud Function or Cloud Run service.
+// This service is designed to be deployed as a Cloud Run service.
 // It listens for CloudEvents from Google Cloud Storage, specifically for new PDF files.
 // When a PDF is uploaded, this function splits it into smaller PDF files (chunks)
 // of a specified number of pages and uploads them to a designated output bucket.

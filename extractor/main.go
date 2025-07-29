@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // package main is the entry point for the document text extraction service.
-// This service is designed to be deployed as a Google Cloud Function or Cloud Run service.
+// This service is designed to be deployed as a Cloud Run service.
 // It listens for CloudEvents from Google Cloud Storage, specifically for new PDF files.
 // When a PDF is uploaded, this function uses the Google Cloud Document AI API
 // to perform Optical Character Recognition (OCR) and extract the text content.
