@@ -117,6 +117,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 				MimeType: mimeType,
 			},
 		},
+		ImagelessMode: true,
 	}
 	// Call the Document AI API to process the document.
 	resp, err := docaiClient.ProcessDocument(ctx, req)

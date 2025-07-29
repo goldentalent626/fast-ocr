@@ -156,12 +156,13 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 
 	// Loop through the number of chunks to create.
-	// Note: `for...range` on an integer creates a loop from 0 to chunkCount-1.
+	wg.Add(chunkCount) // Preallocate waitgroup
 	for chunkIndex := range chunkCount {
-		wg.Add(1) // Increment the WaitGroup counter.
 		// Launch a new goroutine to process the chunk.
 		go func(chunkIndex int) {
 			defer wg.Done() // Decrement the counter when the goroutine completes.
+			// Use local read seeker to avoid race conditions with the seek pointer
+			localReadSeeker := bytes.NewReader(blobBytes)
 			// Construct the name for the output chunk file.
 			chunkedName := fmt.Sprintf("%s_chunk_%06d%s", basename, chunkIndex, extension)
 
@@ -172,16 +173,17 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			// Note: pdfcpu page selection is 1-based, but this code uses 0-based logic,
 			// which may lead to unexpected page ranges.
 			pageRange := []string{
-				fmt.Sprintf("%d-%d", chunkIndex*chunkSize, (chunkIndex+1)*chunkSize),
+				fmt.Sprintf("%d-%d", (chunkIndex*chunkSize)+1, ((chunkIndex+1)*chunkSize)+1),
 			}
 
 			// Use pdfcpu.Trim to extract the page range from the source PDF and write it to the GCS writer.
-			// IMPORTANT: Using the same `readSeeker` across multiple goroutines without proper locking
-			// can lead to a race condition, as each call to `Trim` will move the seek position.
-			pdfcpu.Trim(readSeeker, writer, pageRange, nil)
+			pdfcpu.Trim(localReadSeeker, writer, pageRange, nil)
 
 			// Close the writer to finalize the upload.
-			writer.Close()
+			err = writer.Close()
+			if err != nil {
+				fmt.Printf("error writing to GCS for object %s: %v.\n", chunkedName, err)
+			}
 
 			fmt.Printf("Wrote chunk %s to bucket %s.\n", chunkedName, outputBucket)
 		}(chunkIndex)
