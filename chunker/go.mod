@@ -1,4 +1,4 @@
-module hello-world.sh/extraxt
+module github.com/NucleusEngineering/fast-ocr/chunker
 
 go 1.24.2
 
