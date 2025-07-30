@@ -80,7 +80,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		// If the file is not a PDF, log the issue and return an error.
 		log.Println("encountered unsupported file type")
-		http.Error(w, "encountered unsupported file type", http.StatusBadRequest)
+		http.Error(w, "encountered unsupported file type", http.StatusUnsupportedMediaType)
 		return
 	}
 
@@ -94,7 +94,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	chunkSize, err := strconv.Atoi(chunkSizeRaw)
 	if err != nil {
 		log.Printf("failed to read chunk size config: %v", err)
-		http.Error(w, "error reading chunk size config", http.StatusBadRequest)
+		http.Error(w, "error reading chunk size config", http.StatusInternalServerError)
 		return
 	}
 
@@ -102,7 +102,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	gcsClient, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Printf("failed to create GCS client: %v", err)
-		http.Error(w, "error creating Storage client", http.StatusBadRequest)
+		http.Error(w, "error creating Storage client", http.StatusInternalServerError)
 		return
 	}
 
@@ -110,7 +110,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	reader, err := gcsClient.Bucket(bucket).Object(object).NewReader(ctx)
 	if err != nil {
 		log.Printf("failed to open GCS object reader: %v", err)
-		http.Error(w, "error opening GCS object reader", http.StatusBadRequest)
+		http.Error(w, "error opening GCS object reader", http.StatusInternalServerError)
 		return
 	}
 	defer reader.Close()
@@ -122,7 +122,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	blobBytes, err := io.ReadAll(reader)
 	if err != nil {
 		log.Printf("failed to read GCS object: %v", err)
-		http.Error(w, "error reading GCS object", http.StatusBadRequest)
+		http.Error(w, "error reading GCS object", http.StatusInternalServerError)
 		return
 	}
 
@@ -133,7 +133,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	pageCount, err := pdfcpu.PageCount(readSeeker, nil)
 	if err != nil {
 		log.Printf("failed to inspect PDF object: %v", err)
-		http.Error(w, "error inspecting PDF object", http.StatusBadRequest)
+		http.Error(w, "error inspecting PDF object", http.StatusInternalServerError)
 		return
 	}
 

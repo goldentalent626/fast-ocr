@@ -83,7 +83,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		// If the file is not a PDF, log the issue and return an error.
 		log.Println("encountered unsupported file type")
-		http.Error(w, "encountered unsupported file type", http.StatusBadRequest)
+		http.Error(w, "encountered unsupported file type",
+			http.StatusUnsupportedMediaType)
 		return
 	}
 
@@ -101,7 +102,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	docaiClient, err := documentai.NewDocumentProcessorClient(ctx, option.WithEndpoint(endpoint))
 	if err != nil {
 		log.Printf("failed to create docai client: %v", err)
-		http.Error(w, "error creating Document AI client", http.StatusBadRequest)
+		http.Error(w, "error creating Document AI client",
+			http.StatusInternalServerError)
 		return
 	}
 	defer docaiClient.Close()
@@ -123,7 +125,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := docaiClient.ProcessDocument(ctx, req)
 	if err != nil {
 		log.Printf("failed to process document: %v", err)
-		http.Error(w, "failedd to process document", http.StatusBadRequest)
+		http.Error(w, "failedd to process document", http.StatusInternalServerError)
 		return
 	}
 
@@ -134,7 +136,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	gcsClient, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Printf("failed to create GCS client: %v", err)
-		http.Error(w, "error creating Storage client", http.StatusBadRequest)
+		http.Error(w, "error creating Storage client",
+			http.StatusInternalServerError)
 		return
 	}
 
@@ -144,7 +147,7 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 	byteCount, err := io.WriteString(writer, extracted_text)
 	if err != nil {
 		log.Printf("failed to write GCS object: %v", err)
-		http.Error(w, "error writing extracted text", http.StatusBadRequest)
+		http.Error(w, "error writing extracted text", http.StatusInternalServerError)
 		return
 	}
 	// Close the writer to finalize the upload.
