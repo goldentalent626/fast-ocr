@@ -137,9 +137,8 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate how many chunks will be created. Note: this integer division
-	// truncates, so any remaining pages will be ignored.
-	chunkCount := pageCount / chunkSize
+	// Calculate how many chunks will be created, rounding up to include any remaining pages.
+	chunkCount := (pageCount + chunkSize - 1) / chunkSize
 	// Get the base name of the file, without the extension, to use for chunk naming.
 	basename := strings.TrimSuffix(object, extension)
 
@@ -170,10 +169,9 @@ func eventHandler(w http.ResponseWriter, r *http.Request) {
 			writer := gcsClient.Bucket(outputBucket).Object(chunkedName).NewWriter(ctx)
 
 			// Define the page range for this specific chunk.
-			// Note: pdfcpu page selection is 1-based, but this code uses 0-based logic,
-			// which may lead to unexpected page ranges.
+			// Note: pdfcpu page selection is 1-based.
 			pageRange := []string{
-				fmt.Sprintf("%d-%d", (chunkIndex*chunkSize)+1, ((chunkIndex+1)*chunkSize)+1),
+				fmt.Sprintf("%d-%d", (chunkIndex*chunkSize)+1, (chunkIndex+1)*chunkSize),
 			}
 
 			// Use pdfcpu.Trim to extract the page range from the source PDF and write it to the GCS writer.
